@@ -20,9 +20,11 @@ else:
 
 display = print
 this_dir = os.path.dirname(__file__)
-ALARM = "{}/../../clock.mp3".format(this_dir)
+ALARM_WORK_END = "{}/work_end.mp3".format(this_dir)
+ALARM_REST_END = "{}/rest_end.mp3".format(this_dir)
 DATA_FILENAME = os.path.expanduser("~/.pomodoro")
 DEV_NULL = open(os.devnull, "w")
+DRINK_EMOJI = u'\U0001F379\U0001F378\U00002615\U0001F375\U0001F376\U0001F37A\U0001F377'
 
 
 def notify(title, content, more=''):
@@ -36,6 +38,17 @@ def notify(title, content, more=''):
     msg.setDetailedText(more)
     msg.show()
     app.exec_()
+
+
+def notify_ask(question):
+    if not has_qt:
+        return True
+    app = QApplication(sys.argv)
+    msg = QMessageBox()
+    msg.show()
+    ans = QMessageBox.question(msg, 'pomodoro', question, 
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+    return (ans == QMessageBox.Yes)
 
 
 def tick(duration):
@@ -53,9 +66,9 @@ def play_alarm(filename):
     cmd = ["mpg123", filename]
     try:
         p = subprocess.Popen(cmd, stdout=DEV_NULL, stderr=subprocess.PIPE)
-        p.wait()
-    except FileNotFoundError:
-        pass
+        # p.wait() # don't block
+    except FileNotFoundError as e:
+        print(e)
 
 
 def write_pomo(start, stop, tag):
@@ -71,7 +84,7 @@ def write_pomo(start, stop, tag):
 
 
 @modifiers.kwoargs('repeat', 'alarm', 'notif')
-def main(work=60, rest=5, repeat=10, alarm=True, notif=False):
+def main(work=60., rest=5., repeat=10, alarm=1, notif=1):
     """
     work : int
         nb of minuntes of work
@@ -92,28 +105,34 @@ def main(work=60, rest=5, repeat=10, alarm=True, notif=False):
     for _ in range(repeat):
         display("Work now")
         start = datetime.now()
-        interrupted = tick(int(work) * 60)
+        interrupted = tick(int(work * 60))
         if interrupted:
             break
         stop = datetime.now()
         write_pomo(start, stop, "work")
         if alarm:
-            play_alarm(ALARM)
+            play_alarm(ALARM_WORK_END)
         if notif:
-            notify('pomodoro', 'Finished pomo, rest now.')
+            notify('pomodoro', u'POMO DONE, ' + DRINK_EMOJI)
         display("Rest now")
         start = datetime.now()
-        interrupted = tick(int(rest) * 60)
+        interrupted = tick(int(rest * 60))
         if interrupted:
             break
         stop = datetime.now()
         write_pomo(start, stop, "rest")
 
         if alarm:
-            play_alarm(ALARM)
+            play_alarm(ALARM_REST_END)
         if notif:
-            notify('pomodoro', 'Finished rest, work now.')
-        display("Cycle complete")
+            # notify('pomodoro', 'Finished rest, next cycle work now.')
+            is_continue = notify_ask('Finish rest, start next cycle?')
+        else:
+            # ans = input("Cycle complete, start next? n to stop")
+            # is_continue = (ans not in ['n', 'q'])
+            is_continue = True
+        if not is_continue:
+            break
 
 
 if __name__ == "__main__":
