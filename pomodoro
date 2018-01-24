@@ -52,8 +52,17 @@ def notify_ask(question):
 
 
 def tick(duration):
+    """
+    Console coloring: https://stackoverflow.com/questions/287871/print-in-terminal-with-colors
+    """        
     try:
-        time.sleep(duration)
+        for i in range(int(duration)):
+            # now = datetime.now()
+            # print("%s:%s:%s" % (now.month,now.day,now.year,now.hour,now.minute,now.second))
+            timestr = time.strftime('%H:%M:%S', time.gmtime(duration - i))
+            print("~~~~~~~~~ NUKE 'EM ALL: \x1b[1;37;40m{}\x1b[0m ~~~~~~~~~".format(timestr), flush=True, end='')
+            print('\r', flush=True, end='')
+            time.sleep(1)
     except KeyboardInterrupt:
         display("Interrupting")
         interrupt = True
@@ -105,7 +114,7 @@ def main(work=60., rest=5., repeat=10, alarm=1, notif=1):
     for _ in range(repeat):
         display("Work now")
         start = datetime.now()
-        interrupted = tick(int(work * 60))
+        interrupted = tick(work * 60)
         if interrupted:
             break
         stop = datetime.now()
@@ -116,7 +125,7 @@ def main(work=60., rest=5., repeat=10, alarm=1, notif=1):
             notify('pomodoro', u'POMO DONE, ' + DRINK_EMOJI)
         display("Rest now")
         start = datetime.now()
-        interrupted = tick(int(rest * 60))
+        interrupted = tick(rest * 60)
         if interrupted:
             break
         stop = datetime.now()
