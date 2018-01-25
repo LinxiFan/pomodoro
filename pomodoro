@@ -45,10 +45,19 @@ def notify_ask(question):
         return True
     app = QApplication(sys.argv)
     msg = QMessageBox()
-    msg.show()
-    ans = QMessageBox.question(msg, 'pomodoro', question, 
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-    return (ans == QMessageBox.Yes)
+    msg.setIcon(QMessageBox.Question)
+    msg.setText(question)
+    msg.setWindowTitle('rest done')
+    msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+    msg.setDefaultButton(QMessageBox.Yes)
+    return msg.exec_() == QMessageBox.Yes
+   #app = QApplication(sys.argv)
+   #msg = QMessageBox()
+   #msg.show()
+   #ans = QMessageBox.question(msg, 'pomodoro', question, 
+   #        QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+   #msg.exec_()
+   #return (ans == QMessageBox.Yes)
 
 
 def tick(duration):
